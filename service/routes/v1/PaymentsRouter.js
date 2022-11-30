@@ -5,11 +5,8 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   /**
    * #route   GET /payments/v1/
-   * #desc    
+   * #desc
    */
-
-
-  // TODO: ADD Validation + controller
 });
 
 export { router };
