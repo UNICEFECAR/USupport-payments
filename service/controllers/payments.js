@@ -29,7 +29,6 @@ export const createPaymentIntent = async ({
   email,
   consultationId,
 }) => {
-  console.log(language);
   // Get consultation price from database by consultationId.
   const consultation = await getConsultationByIdQuery({
     poolCountry: country,
