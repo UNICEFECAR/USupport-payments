@@ -7,6 +7,7 @@ export const postCreatePaymentIntentSchema = yup.object().shape({
   client_id: yup.string().uuid().required(),
   stripe_customer_id: yup.string().nullable(),
   email: yup.string().email().nullable(),
+  consultationId: yup.string().uuid().required(),
 });
 
 export const postWebhookEventSchema = yup.object().shape({
