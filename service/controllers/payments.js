@@ -86,7 +86,7 @@ export const createPaymentIntent = async ({
       if (res.rowCount === 0) {
         throw currencyNotFound(language);
       } else {
-        return res.rows[0].code;
+        return res.rows[0];
       }
     })
     .catch((err) => {
@@ -97,7 +97,7 @@ export const createPaymentIntent = async ({
   const paymentIntent = await stripeInstance.paymentIntents
     .create({
       amount: consultation.price * 100,
-      currency: countryCurrency.toLowerCase(),
+      currency: countryCurrency.code.toLowerCase(),
       setup_future_usage: "off_session",
       receipt_email: email ? email : "",
       automatic_payment_methods: {
@@ -113,7 +113,11 @@ export const createPaymentIntent = async ({
       throw err;
     });
 
-  return { clientSecret: paymentIntent.client_secret };
+  return {
+    clientSecret: paymentIntent.client_secret,
+    price: consultation.price,
+    currency: countryCurrency.symbol,
+  };
 };
 
 export const processWebhookEvent = async ({ signature, payload }) => {
