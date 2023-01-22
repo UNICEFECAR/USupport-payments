@@ -4,11 +4,13 @@ import dotenv from "dotenv";
 import {
   postCreatePaymentIntentSchema,
   postWebhookEventSchema,
+  getPaymentHistorySchema,
 } from "#schemas/paymentSchemas";
 
 import {
   createPaymentIntent,
   processWebhookEvent,
+  getPaymentHistory,
 } from "#controllers/payments";
 
 import { populateClient } from "#middlewares/populateMiddleware";
@@ -64,6 +66,26 @@ router.post("/webhook", async (req, res, next) => {
     .strict()
     .validate({ signature, payload })
     .then(processWebhookEvent)
+    .then((result) => res.json(result).status(204))
+    .catch(next);
+});
+
+router.get("/history", populateClient, async (req, res, next) => {
+  /**
+   * #route   GET /payments/v1/one-time/history
+   * #desc
+   */
+  const language = req.header("x-language-alpha-2");
+  const stripe_customer_id = req.client.stripe_customer_id;
+
+  return await getPaymentHistorySchema
+    .noUnknown(true)
+    .strict()
+    .validate({
+      language,
+      stripe_customer_id,
+    })
+    .then(getPaymentHistory)
     .then((result) => res.json(result).status(204))
     .catch(next);
 });

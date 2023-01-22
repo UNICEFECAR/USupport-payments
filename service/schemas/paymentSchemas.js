@@ -13,3 +13,8 @@ export const postWebhookEventSchema = yup.object().shape({
   signature: yup.string().required(),
   payload: yup.object().required(),
 });
+
+export const getPaymentHistorySchema = yup.object().shape({
+  language: yup.string().required(),
+  stripe_customer_id: yup.string().nullable(),
+});

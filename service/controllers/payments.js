@@ -73,6 +73,8 @@ export const createPaymentIntent = async ({
     .create({
       amount: 50000,
       currency: countryCurrency.toLowerCase(),
+      setup_future_usage: "off_session",
+      receipt_email: email ? email : "",
       automatic_payment_methods: {
         enabled: true,
       },
@@ -111,4 +113,79 @@ export const processWebhookEvent = async ({ signature, payload }) => {
       console.log(`Unhandled event type ${event.type}.`);
   }
   return { received: true };
+};
+
+export const getPaymentHistory = async ({ language, stripe_customer_id }) => {
+  // Initialise the response
+  let response = [];
+
+  const paymentIntents = await stripeInstance.paymentIntents
+    .list({
+      customer: stripe_customer_id,
+      limit: 100,
+    })
+    .catch((err) => {
+      throw err;
+    });
+
+  // Compute the response based on each payment intent including just events with the status "succeeded".
+  for (let i = 0; i < paymentIntents.data.length; i++) {
+    if (paymentIntents.data[i].status === "succeeded") {
+      const payment = paymentIntents.data[i];
+      let currentPaymentObj = {
+        service: "",
+        price: null,
+        date: "",
+        time: "",
+        paymentId: "",
+        paymentMethod: "",
+        recipient: "USupport",
+        address:
+          "Almaty Kazakstan, 050000, 1st street, 1st building, 1st floor, 1st room",
+        email: "usupport@7digit.io",
+        invoice_pdf: "",
+        hosted_invoice_url: "",
+        receipt_url: "",
+      };
+
+      let creationDate = new Date(payment.created * 1000);
+
+      currentPaymentObj.product = payment.description;
+      currentPaymentObj.price = payment.amount / 100;
+      currentPaymentObj.date = creationDate;
+      currentPaymentObj.paymentId = payment.id;
+
+      // Try to get the receip of the payment
+      try {
+        const charge = await stripeInstance.charges.retrieve(
+          payment.latest_charge
+        );
+        currentPaymentObj.receipt_url = charge.receipt_url;
+      } catch (error) {
+        currentPaymentObj.receipt_url = "";
+      }
+
+      //Try to get the payment method details which were used for the given payment. An error might occur if the payment method was deleted by the user.
+      try {
+        const paymentMethod = await stripeInstance.paymentMethods.retrieve(
+          payment.payment_method
+        );
+        currentPaymentObj.paymentMethod = paymentMethod.card.brand;
+      } catch (error) {
+        currentPaymentObj.paymentMethod = "Not Existent";
+      }
+
+      //If the payment intent has attached to it an invoice fetch the data for it and place the download and preview url inside the response object
+      if (payment.invoice) {
+        const invoice = await stripeInstance.invoices.retrieve(payment.invoice);
+        currentPaymentObj.invoice_pdf = invoice.invoice_pdf;
+        currentPaymentObj.hosted_invoice_url = invoice.hosted_invoice_url;
+      }
+
+      // Add the current computed details information to the response
+      response.push(currentPaymentObj);
+    }
+  }
+
+  return response;
 };
