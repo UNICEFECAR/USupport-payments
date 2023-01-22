@@ -2,8 +2,17 @@ import stripe from "stripe";
 
 import { getCurrencyByCountryId } from "#queries/currencies";
 import { updateStripeCustomerIdQuery } from "#queries/clients";
+import { addTransactionQuery } from "#queries/transactions";
+import { getConsultationByIdQuery } from "#queries/consultations";
 
-import { currencyNotFound, stripeCustomerIdNotFound } from "#utils/errors";
+import {
+  consultationNotFound,
+  currencyNotFound,
+  stripeCustomerIdNotFound,
+  transactionNotFound,
+  metadataKeysNotFound,
+  webhookEventKeysNotFound,
+} from "#utils/errors";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_ENDPOINT_SECRET =
@@ -18,11 +27,27 @@ export const createPaymentIntent = async ({
   client_id,
   stripe_customer_id,
   email,
+  consultationId,
 }) => {
-  // TODO: Get consultation price from database and multiply by 100 to convert to cents
+  console.log(language);
+  // Get consultation price from database by consultationId.
+  const consultation = await getConsultationByIdQuery({
+    poolCountry: country,
+    consultationId,
+  })
+    .then((raw) => {
+      if (raw.rowCount === 0) {
+        throw consultationNotFound(language);
+      } else {
+        return raw.rows[0];
+      }
+    })
+    .catch((err) => {
+      throw err;
+    });
 
   let newCustomer;
-  // Chekc if stripe customer exists
+  // Chekc if stripe customer exists and if not create new one and save it to the database.
   if (!stripe_customer_id) {
     // Create a new customer and attach the PaymentMethod in one API call.
     newCustomer = await stripeInstance.customers
@@ -71,12 +96,16 @@ export const createPaymentIntent = async ({
   // Create a PaymentIntent with the order amount and currency
   const paymentIntent = await stripeInstance.paymentIntents
     .create({
-      amount: 50000,
+      amount: consultation.price * 100,
       currency: countryCurrency.toLowerCase(),
       setup_future_usage: "off_session",
       receipt_email: email ? email : "",
       automatic_payment_methods: {
         enabled: true,
+      },
+      metadata: {
+        consultationId: consultationId,
+        countryAlpha2: country,
       },
       customer: stripe_customer_id ? stripe_customer_id : newCustomer?.id,
     })
@@ -103,11 +132,41 @@ export const processWebhookEvent = async ({ signature, payload }) => {
   // Handle the event
   switch (event.type) {
     case "payment_intent.succeeded":
-      const paymentIntent = event.data.object;
-      console.log(`PaymentIntent for ${paymentIntent.amount} was successful!`);
-      // Then define and call a method to handle the successful payment intent.
-      // handlePaymentIntentSucceeded(paymentIntent);
+      let consultationId, country, paymentIntentId;
+
+      try {
+        paymentIntentId = event.data.object.id;
+      } catch {
+        throw webhookEventKeysNotFound;
+      }
+
+      try {
+        consultationId = event.data.object.metadata.consultationId;
+        country = event.data.object.metadata.countryAlpha2;
+      } catch {
+        throw metadataKeysNotFound;
+      }
+
+      // Add new transaction to database.
+      await addTransactionQuery({
+        poolCountry: country,
+        type: "card",
+        consultationId: consultationId,
+        paymentIntent: paymentIntentId,
+      })
+        .then((raw) => {
+          if (raw.rowCount === 0) {
+            throw transactionNotFound("en");
+          } else {
+            return raw.rows[0];
+          }
+        })
+        .catch((err) => {
+          throw err;
+        });
+
       break;
+
     default:
       // Unexpected event type
       console.log(`Unhandled event type ${event.type}.`);

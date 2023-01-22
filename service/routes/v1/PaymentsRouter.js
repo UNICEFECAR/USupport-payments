@@ -36,6 +36,8 @@ router.post(
     const stripe_customer_id = req.client.stripe_customer_id;
     const email = req.client.email;
 
+    const consultationId = req.body.consultationId;
+
     return await postCreatePaymentIntentSchema
       .noUnknown(true)
       .strict()
@@ -46,6 +48,7 @@ router.post(
         client_id,
         stripe_customer_id,
         email,
+        consultationId,
       })
       .then(createPaymentIntent)
       .then((result) => res.json(result).status(204))
