@@ -6,4 +6,6 @@ export default {
   metadata_keys_not_found_error: "Metadata keys not found",
   webhook_event_keys_not_found_error: "Webhook event keys not found",
   consultation_not_found_error: "Consultation not found",
+  paymentIntentDescription:
+    "Your consultation is booked for {consultationDate} at {consultaitonTime}. You can change the date and time when you want until 24 hours before the consultation.",
 };

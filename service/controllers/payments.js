@@ -1,5 +1,7 @@
 import stripe from "stripe";
 
+import { t2 } from "#translations/index";
+
 import { getCurrencyByCountryId } from "#queries/currencies";
 import { updateStripeCustomerIdQuery } from "#queries/clients";
 import { addTransactionQuery } from "#queries/transactions";
@@ -13,6 +15,8 @@ import {
   metadataKeysNotFound,
   webhookEventKeysNotFound,
 } from "#utils/errors";
+
+import { getTime, getDateView } from "#utils/helperFunctions";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_ENDPOINT_SECRET =
@@ -106,6 +110,10 @@ export const createPaymentIntent = async ({
         consultationId: consultationId,
         countryAlpha2: country,
       },
+      description: t2("paymentIntentDescription", language, {
+        consultationDate: getDateView(consultation.time),
+        consultaitonTime: getTime(consultation.time),
+      }),
       customer: stripe_customer_id ? stripe_customer_id : newCustomer?.id,
     })
     .catch((err) => {
