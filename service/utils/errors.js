@@ -55,3 +55,11 @@ export const consultationNotFound = (language) => {
   error.status = 404;
   return error;
 };
+
+export const scheduleCondultationError = () => {
+  const error = new Error();
+  error.message = "SCHEDULE CONSULTATION ERROR";
+  error.name = "SCHEDULE CONSULTATION ERROR";
+  error.status = 500;
+  return error;
+};

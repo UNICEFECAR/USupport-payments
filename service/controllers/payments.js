@@ -1,5 +1,5 @@
+import fetch from "node-fetch";
 import stripe from "stripe";
-
 import { t2 } from "#translations/index";
 
 import { getCurrencyByCountryId } from "#queries/currencies";
@@ -14,10 +14,13 @@ import {
   transactionNotFound,
   metadataKeysNotFound,
   webhookEventKeysNotFound,
+  scheduleCondultationError,
 } from "#utils/errors";
 
 import { getTime, getDateView } from "#utils/helperFunctions";
 
+const PROVIDER_LOCAL_HOST = "http://localhost:3002";
+const PROVIDER_URL = process.env.PROVIDER_URL;
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_ENDPOINT_SECRET =
   process.env.STRIPE_WEBHOOK_ENDPOINT_SECRET;
@@ -109,6 +112,7 @@ export const createPaymentIntent = async ({
       metadata: {
         consultationId: consultationId,
         countryAlpha2: country,
+        language: language,
       },
       description: t2("paymentIntentDescription", language, {
         consultationDate: getDateView(consultation.time),
@@ -132,18 +136,23 @@ export const processWebhookEvent = async ({ signature, payload }) => {
 
   // Only verify the event if you have an endpoint secret defined.
   // Otherwise use the basic event deserialized with JSON.parse
+
   if (STRIPE_WEBHOOK_ENDPOINT_SECRET) {
-    event = stripeInstance.webhooks
-      .constructEvent(payload, signature, STRIPE_WEBHOOK_ENDPOINT_SECRET)
-      .catch((err) => {
-        throw err;
-      });
+    try {
+      event = stripeInstance.webhooks.constructEvent(
+        payload,
+        signature,
+        STRIPE_WEBHOOK_ENDPOINT_SECRET
+      );
+    } catch (err) {
+      console.log(`⚠️  Webhook signature verification failed.`, err.message);
+    }
   }
 
   // Handle the event
   switch (event.type) {
     case "payment_intent.succeeded":
-      let consultationId, country, paymentIntentId;
+      let consultationId, country, language, paymentIntentId;
 
       try {
         paymentIntentId = event.data.object.id;
@@ -154,6 +163,7 @@ export const processWebhookEvent = async ({ signature, payload }) => {
       try {
         consultationId = event.data.object.metadata.consultationId;
         country = event.data.object.metadata.countryAlpha2;
+        language = event.data.object.metadata.language;
       } catch {
         throw metadataKeysNotFound;
       }
@@ -175,6 +185,62 @@ export const processWebhookEvent = async ({ signature, payload }) => {
         .catch((err) => {
           throw err;
         });
+
+      const consultation = await getConsultationByIdQuery({
+        poolCountry: country,
+        consultationId,
+      })
+        .then((raw) => {
+          if (raw.rowCount === 0) {
+            throw consultationNotFound(language);
+          } else {
+            return raw.rows[0];
+          }
+        })
+        .catch((err) => {
+          throw err;
+        });
+
+      if (consultation.status === "suggested") {
+        // Accept Schedule consultation
+        try {
+          await fetch(
+            `${PROVIDER_URL}/provider/v1/consultation/accept-suggest`,
+            {
+              method: "PUT",
+              headers: {
+                "x-country-alpha-2": country,
+                "x-language-alpha-2": language,
+                host: PROVIDER_LOCAL_HOST,
+                "Content-type": "application/json",
+              },
+              ...(consultationId && {
+                body: JSON.stringify({ consultationId }),
+              }),
+            }
+          );
+        } catch (err) {
+          throw scheduleCondultationError;
+        }
+      } else {
+        // Schedule consultation
+        try {
+          await fetch(`${PROVIDER_URL}/provider/v1/consultation/schedule`, {
+            method: "PUT",
+            headers: {
+              "x-country-alpha-2": country,
+              "x-language-alpha-2": language,
+              host: PROVIDER_LOCAL_HOST,
+              "Content-type": "application/json",
+            },
+            ...(consultationId && {
+              body: JSON.stringify({ consultationId }),
+            }),
+          });
+        } catch (err) {
+          throw scheduleCondultationError;
+        }
+      }
 
       break;
 
