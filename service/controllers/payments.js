@@ -4,7 +4,10 @@ import { t2 } from "#translations/index";
 
 import { getCurrencyByCountryId } from "#queries/currencies";
 import { updateStripeCustomerIdQuery } from "#queries/clients";
-import { addTransactionQuery } from "#queries/transactions";
+import {
+  addTransactionQuery,
+  getTrasanctionByConsultationIdQuery,
+} from "#queries/transactions";
 import { getConsultationByIdQuery } from "#queries/consultations";
 
 import {
@@ -174,6 +177,7 @@ export const processWebhookEvent = async ({ signature, payload }) => {
         type: "card",
         consultationId: consultationId,
         paymentIntent: paymentIntentId,
+        paymentRefundId: null,
       })
         .then((raw) => {
           if (raw.rowCount === 0) {
@@ -324,4 +328,75 @@ export const getPaymentHistory = async ({ language, stripe_customer_id }) => {
   }
 
   return response;
+};
+
+export const processRefund = async ({
+  country,
+  language,
+  user_id,
+  consultationId,
+}) => {
+  // Find transaction and get the payment intent id from it if it exists.
+  const transaction = await getTrasanctionByConsultationIdQuery({
+    poolCountry: country,
+    consultationId,
+  })
+    .then((res) => {
+      if (res.rowCount === 0) {
+        return null;
+      } else {
+        return res.rows[0];
+      }
+    })
+    .catch((err) => {
+      throw err;
+    });
+
+  //Create refund for the payment intent
+  const refund = await stripeInstance.refunds
+    .create({
+      payment_intent: transaction.payment_intent,
+      metadata: {
+        consultationId: consultationId,
+        userId: user_id,
+        countryAlpha2: country,
+        language: language,
+      },
+    })
+    .catch((err) => {
+      throw err;
+    });
+
+  // Add new transaction to database.
+  await addTransactionQuery({
+    poolCountry: country,
+    type: "payment_refund",
+    consultationId: consultationId,
+    paymentIntent: transaction.payment_intent,
+    paymentRefundId: refund.id,
+  })
+    .then((raw) => {
+      if (raw.rowCount === 0) {
+        throw transactionNotFound("en");
+      } else {
+        return raw.rows[0];
+      }
+    })
+    .catch((err) => {
+      throw err;
+    });
+
+  await fetch(`${PROVIDER_URL}/provider/v1/consultation/cancel`, {
+    method: "PUT",
+    headers: {
+      host: PROVIDER_LOCAL_HOST,
+      "x-user-id": user_id,
+      "x-language-alpha-2": language,
+      "x-country-alpha-2": country,
+      "Content-type": "application/json",
+    },
+    ...({ consultationId } && { body: JSON.stringify({ consultationId }) }),
+  }).catch(console.log);
+
+  return { success: true };
 };

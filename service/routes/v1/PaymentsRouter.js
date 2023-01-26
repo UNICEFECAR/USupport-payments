@@ -5,12 +5,14 @@ import {
   postCreatePaymentIntentSchema,
   postWebhookEventSchema,
   getPaymentHistorySchema,
+  postRefundSchema,
 } from "#schemas/paymentSchemas";
 
 import {
   createPaymentIntent,
   processWebhookEvent,
   getPaymentHistory,
+  processRefund,
 } from "#controllers/payments";
 
 import { populateClient } from "#middlewares/populateMiddleware";
@@ -89,6 +91,31 @@ router.get("/history", populateClient, async (req, res, next) => {
       stripe_customer_id,
     })
     .then(getPaymentHistory)
+    .then((result) => res.json(result).status(204))
+    .catch(next);
+});
+
+router.post("/refund", async (req, res, next) => {
+  /**
+   * #route   GET /payments/v1/one-time/refund
+   * #desc
+   */
+
+  const country = req.header("x-country-alpha-2");
+  const language = req.header("x-language-alpha-2");
+  const user_id = req.header("x-user-id");
+  const consultationId = req.body.consultationId;
+
+  return await postRefundSchema
+    .noUnknown(true)
+    .strict()
+    .validate({
+      country,
+      language,
+      user_id,
+      consultationId,
+    })
+    .then(processRefund)
     .then((result) => res.json(result).status(204))
     .catch(next);
 });

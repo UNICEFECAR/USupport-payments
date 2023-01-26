@@ -19,3 +19,10 @@ export const getPaymentHistorySchema = yup.object().shape({
   language: yup.string().required(),
   stripe_customer_id: yup.string().nullable(),
 });
+
+export const postRefundSchema = yup.object().shape({
+  country: yup.string().required(),
+  language: yup.string().required(),
+  user_id: yup.string().uuid().required(),
+  consultationId: yup.string().uuid().required(),
+});
