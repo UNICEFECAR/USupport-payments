@@ -63,3 +63,11 @@ export const scheduleCondultationError = () => {
   error.status = 500;
   return error;
 };
+
+export const paymentIntentsNotFound = (language) => {
+  const error = new Error();
+  error.message = t("payment_intents_not_found_error", language);
+  error.name = "PAYMENT INTENTS NOT FOUND";
+  error.status = 500;
+  return error;
+};
