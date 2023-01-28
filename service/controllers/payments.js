@@ -18,6 +18,7 @@ import {
   metadataKeysNotFound,
   webhookEventKeysNotFound,
   scheduleCondultationError,
+  paymentIntentsNotFound,
 } from "#utils/errors";
 
 import { getTime, getDateView } from "#utils/helperFunctions";
@@ -271,7 +272,8 @@ export const getPaymentHistory = async ({
         start_after_payment_intent_id && start_after_payment_intent_id,
     })
     .catch((err) => {
-      throw err;
+      console.log(err);
+      throw paymentIntentsNotFound;
     });
 
   // Get the id of the last payment retrieved in order to pass it to the ui. It will be passed back in order to perform the loading on scroll funcitonality
@@ -361,7 +363,7 @@ export const processRefund = async ({
   })
     .then((res) => {
       if (res.rowCount === 0) {
-        return null;
+        throw transactionNotFound("en");
       } else {
         return res.rows[0];
       }
