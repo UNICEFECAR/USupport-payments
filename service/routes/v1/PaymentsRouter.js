@@ -80,15 +80,18 @@ router.get("/history", populateClient, async (req, res, next) => {
    * #route   GET /payments/v1/one-time/history
    * #desc
    */
-  const language = req.header("x-language-alpha-2");
   const stripe_customer_id = req.client.stripe_customer_id;
+  const limit = req.query.limit;
+  console.log("limit in the router", limit);
+  const start_after_payment_intent_id = req.query.start_after_payment_intent_id;
 
   return await getPaymentHistorySchema
     .noUnknown(true)
     .strict()
     .validate({
-      language,
       stripe_customer_id,
+      limit,
+      start_after_payment_intent_id,
     })
     .then(getPaymentHistory)
     .then((result) => res.json(result).status(204))

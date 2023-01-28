@@ -255,18 +255,36 @@ export const processWebhookEvent = async ({ signature, payload }) => {
   return { received: true };
 };
 
-export const getPaymentHistory = async ({ language, stripe_customer_id }) => {
+export const getPaymentHistory = async ({
+  stripe_customer_id,
+  limit,
+  start_after_payment_intent_id,
+}) => {
   // Initialise the response
   let response = [];
 
   const paymentIntents = await stripeInstance.paymentIntents
     .list({
       customer: stripe_customer_id,
-      limit: 100,
+      limit: limit && limit,
+      starting_after:
+        start_after_payment_intent_id && start_after_payment_intent_id,
     })
     .catch((err) => {
       throw err;
     });
+
+  // Get the id of the last payment retrieved in order to pass it to the ui. It will be passed back in order to perform the loading on scroll funcitonality
+  let lastPaymentId;
+  if (paymentIntents.data.length > 0) {
+    lastPaymentId = paymentIntents.data[paymentIntents.data.length - 1].id;
+  } else {
+    // When it is set to null it means that there are no more
+    lastPaymentId = null;
+  }
+
+  // Get the has more value in order to pass it to the ui. It will be passed back in order to perform the loading on scroll funcitonality
+  let hasMore = paymentIntents.has_more; // true or false
 
   // Compute the response based on each payment intent including just events with the status "succeeded".
   for (let i = 0; i < paymentIntents.data.length; i++) {
@@ -327,7 +345,7 @@ export const getPaymentHistory = async ({ language, stripe_customer_id }) => {
     }
   }
 
-  return response;
+  return { payments: response, lastPaymentId: lastPaymentId, hasMore: hasMore };
 };
 
 export const processRefund = async ({

@@ -16,8 +16,9 @@ export const postWebhookEventSchema = yup.object().shape({
 });
 
 export const getPaymentHistorySchema = yup.object().shape({
-  language: yup.string().required(),
   stripe_customer_id: yup.string().nullable(),
+  limit: yup.string().required(),
+  start_after_payment_intent_id: yup.string().nullable(),
 });
 
 export const postRefundSchema = yup.object().shape({
