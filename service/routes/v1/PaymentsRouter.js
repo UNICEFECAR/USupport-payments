@@ -82,7 +82,6 @@ router.get("/history", populateClient, async (req, res, next) => {
    */
   const stripe_customer_id = req.client.stripe_customer_id;
   const limit = req.query.limit;
-  console.log("limit in the router", limit);
   const start_after_payment_intent_id = req.query.start_after_payment_intent_id;
 
   return await getPaymentHistorySchema
