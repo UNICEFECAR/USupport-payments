@@ -19,7 +19,7 @@ app.use(helmet());
 /*------------- Payments Service Endpoints -------------*/
 
 // Example router
-app.use("/payments/v1/", v1.PaymentsRouter);
+app.use("/payments/v1/one-time", v1.PaymentsRouter);
 
 /*------------- Error middleware -------------*/
 
