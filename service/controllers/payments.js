@@ -21,8 +21,6 @@ import {
   paymentIntentsNotFound,
 } from "#utils/errors";
 
-import { getTime, getDateView } from "#utils/helperFunctions";
-
 const PROVIDER_LOCAL_HOST = "http://localhost:3002";
 const PROVIDER_URL = process.env.PROVIDER_URL;
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
@@ -30,6 +28,8 @@ const STRIPE_WEBHOOK_ENDPOINT_SECRET =
   process.env.STRIPE_WEBHOOK_ENDPOINT_SECRET;
 
 const stripeInstance = stripe(STRIPE_SECRET_KEY);
+
+const textAudioVideoService = "text_audio_video_consultation";
 
 export const createPaymentIntent = async ({
   country,
@@ -103,27 +103,29 @@ export const createPaymentIntent = async ({
       throw err;
     });
 
+  let paymentIntentObj = {
+    amount: consultation.price * 100,
+    currency: countryCurrency.code.toLowerCase(),
+    setup_future_usage: "off_session",
+    automatic_payment_methods: {
+      enabled: true,
+    },
+    metadata: {
+      consultationId: consultationId,
+      countryAlpha2: country,
+      language: language,
+    },
+    description: textAudioVideoService,
+
+    customer: stripe_customer_id ? stripe_customer_id : newCustomer?.id,
+  };
+
+  if (email) {
+    paymentIntentObj["receipt_email"] = email;
+  }
   // Create a PaymentIntent with the order amount and currency
   const paymentIntent = await stripeInstance.paymentIntents
-    .create({
-      amount: consultation.price * 100,
-      currency: countryCurrency.code.toLowerCase(),
-      setup_future_usage: "off_session",
-      receipt_email: email ? email : "",
-      automatic_payment_methods: {
-        enabled: true,
-      },
-      metadata: {
-        consultationId: consultationId,
-        countryAlpha2: country,
-        language: language,
-      },
-      description: t2("paymentIntentDescription", language, {
-        consultationDate: getDateView(consultation.time),
-        consultaitonTime: getTime(consultation.time),
-      }),
-      customer: stripe_customer_id ? stripe_customer_id : newCustomer?.id,
-    })
+    .create(paymentIntentObj)
     .catch((err) => {
       throw err;
     });
