@@ -6,7 +6,7 @@ import { getCurrencyByCountryId } from "#queries/currencies";
 import { updateStripeCustomerIdQuery } from "#queries/clients";
 import {
   addTransactionQuery,
-  getTrasanctionByConsultationIdQuery,
+  getTransactionByConsultationIdQuery,
 } from "#queries/transactions";
 import { getConsultationByIdQuery } from "#queries/consultations";
 
@@ -57,7 +57,7 @@ export const createPaymentIntent = async ({
     });
 
   let newCustomer;
-  // Chekc if stripe customer exists and if not create new one and save it to the database.
+  // Check if stripe customer exists and if not create new one and save it to the database.
   if (!stripe_customer_id) {
     // Create a new customer and attach the PaymentMethod in one API call.
     newCustomer = await stripeInstance.customers
@@ -157,7 +157,7 @@ export const processWebhookEvent = async ({ signature, payload }) => {
 
   // Handle the event
   switch (event.type) {
-    case "payment_intent.succeeded":
+    case "payment_intent.succeeded": {
       let consultationId, country, language, paymentIntentId;
 
       try {
@@ -250,7 +250,7 @@ export const processWebhookEvent = async ({ signature, payload }) => {
       }
 
       break;
-
+    }
     default:
       // Unexpected event type
       console.log(`Unhandled event type ${event.type}.`);
@@ -359,7 +359,7 @@ export const processRefund = async ({
   consultationId,
 }) => {
   // Find transaction and get the payment intent id from it if it exists.
-  const transaction = await getTrasanctionByConsultationIdQuery({
+  const transaction = await getTransactionByConsultationIdQuery({
     poolCountry: country,
     consultationId,
   })
