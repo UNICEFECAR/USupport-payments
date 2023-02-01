@@ -159,7 +159,6 @@ export const processWebhookEvent = async ({ signature, payload }) => {
   switch (event.type) {
     case "payment_intent.succeeded":
       let consultationId, country, language, paymentIntentId;
-
       try {
         paymentIntentId = event.data.object.id;
       } catch {
@@ -266,90 +265,104 @@ export const getPaymentHistory = async ({
   // Initialise the response
   let response = [];
 
-  const paymentIntents = await stripeInstance.paymentIntents
-    .list({
-      customer: stripe_customer_id,
-      limit: limit && limit,
-      starting_after:
-        start_after_payment_intent_id && start_after_payment_intent_id,
+  let stripeObject = {
+    customer: stripe_customer_id,
+    limit: limit && limit,
+  };
+
+  if (start_after_payment_intent_id) {
+    stripeObject["starting_after"] = start_after_payment_intent_id;
+  }
+  const result = await stripeInstance.paymentIntents
+    .list(stripeObject)
+    .then(async (paymentIntents) => {
+      // Get the id of the last payment retrieved in order to pass it to the ui. It will be passed back in order to perform the loading on scroll funcitonality
+      let lastPaymentId;
+      if (paymentIntents.data.length > 0) {
+        lastPaymentId = paymentIntents.data[paymentIntents.data.length - 1].id;
+      } else {
+        // When it is set to null it means that there are no more
+        lastPaymentId = null;
+      }
+
+      // Get the has more value in order to pass it to the ui. It will be passed back in order to perform the loading on scroll funcitonality
+      let hasMore = paymentIntents.has_more; // true or false
+
+      // Compute the response based on each payment intent including just events with the status "succeeded".
+      for (let i = 0; i < paymentIntents.data.length; i++) {
+        if (paymentIntents.data[i].status === "succeeded") {
+          const payment = paymentIntents.data[i];
+          let currentPaymentObj = {
+            service: "",
+            price: null,
+            date: "",
+            time: "",
+            paymentId: "",
+            paymentMethod: "",
+            recipient: "USupport",
+            address:
+              "Almaty Kazakstan, 050000, 1st street, 1st building, 1st floor, 1st room",
+            email: "usupport@7digit.io",
+            invoice_pdf: "",
+            hosted_invoice_url: "",
+            receipt_url: "",
+          };
+
+          let creationDate = new Date(payment.created * 1000);
+
+          currentPaymentObj.product = payment.description;
+          currentPaymentObj.price = payment.amount / 100;
+          currentPaymentObj.date = creationDate;
+          currentPaymentObj.paymentId = payment.id;
+          currentPaymentObj.service = payment.description
+            ? payment.description
+            : "Consultation";
+
+          // Try to get the receip of the payment
+          try {
+            const charge = await stripeInstance.charges.retrieve(
+              payment.latest_charge
+            );
+            currentPaymentObj.receipt_url = charge.receipt_url;
+          } catch (error) {
+            currentPaymentObj.receipt_url = "";
+          }
+
+          //Try to get the payment method details which were used for the given payment. An error might occur if the payment method was deleted by the user.
+          try {
+            const paymentMethod = await stripeInstance.paymentMethods.retrieve(
+              payment.payment_method
+            );
+            currentPaymentObj.paymentMethod = paymentMethod.card.brand;
+          } catch (error) {
+            currentPaymentObj.paymentMethod = "Not Existent";
+          }
+
+          //If the payment intent has attached to it an invoice fetch the data for it and place the download and preview url inside the response object
+          if (payment.invoice) {
+            const invoice = await stripeInstance.invoices.retrieve(
+              payment.invoice
+            );
+            currentPaymentObj.invoice_pdf = invoice.invoice_pdf;
+            currentPaymentObj.hosted_invoice_url = invoice.hosted_invoice_url;
+          }
+
+          // Add the current computed details information to the response
+          response.push(currentPaymentObj);
+        }
+      }
+
+      return {
+        payments: response.length > 0 ? response : null,
+        lastPaymentId: lastPaymentId,
+        hasMore: hasMore,
+      };
     })
     .catch((err) => {
-      console.log(err);
+      console.log("error ", err);
       throw paymentIntentsNotFound;
     });
-
-  // Get the id of the last payment retrieved in order to pass it to the ui. It will be passed back in order to perform the loading on scroll funcitonality
-  let lastPaymentId;
-  if (paymentIntents.data.length > 0) {
-    lastPaymentId = paymentIntents.data[paymentIntents.data.length - 1].id;
-  } else {
-    // When it is set to null it means that there are no more
-    lastPaymentId = null;
-  }
-
-  // Get the has more value in order to pass it to the ui. It will be passed back in order to perform the loading on scroll funcitonality
-  let hasMore = paymentIntents.has_more; // true or false
-
-  // Compute the response based on each payment intent including just events with the status "succeeded".
-  for (let i = 0; i < paymentIntents.data.length; i++) {
-    if (paymentIntents.data[i].status === "succeeded") {
-      const payment = paymentIntents.data[i];
-      let currentPaymentObj = {
-        service: "",
-        price: null,
-        date: "",
-        time: "",
-        paymentId: "",
-        paymentMethod: "",
-        recipient: "USupport",
-        address:
-          "Almaty Kazakstan, 050000, 1st street, 1st building, 1st floor, 1st room",
-        email: "usupport@7digit.io",
-        invoice_pdf: "",
-        hosted_invoice_url: "",
-        receipt_url: "",
-      };
-
-      let creationDate = new Date(payment.created * 1000);
-
-      currentPaymentObj.product = payment.description;
-      currentPaymentObj.price = payment.amount / 100;
-      currentPaymentObj.date = creationDate;
-      currentPaymentObj.paymentId = payment.id;
-
-      // Try to get the receip of the payment
-      try {
-        const charge = await stripeInstance.charges.retrieve(
-          payment.latest_charge
-        );
-        currentPaymentObj.receipt_url = charge.receipt_url;
-      } catch (error) {
-        currentPaymentObj.receipt_url = "";
-      }
-
-      //Try to get the payment method details which were used for the given payment. An error might occur if the payment method was deleted by the user.
-      try {
-        const paymentMethod = await stripeInstance.paymentMethods.retrieve(
-          payment.payment_method
-        );
-        currentPaymentObj.paymentMethod = paymentMethod.card.brand;
-      } catch (error) {
-        currentPaymentObj.paymentMethod = "Not Existent";
-      }
-
-      //If the payment intent has attached to it an invoice fetch the data for it and place the download and preview url inside the response object
-      if (payment.invoice) {
-        const invoice = await stripeInstance.invoices.retrieve(payment.invoice);
-        currentPaymentObj.invoice_pdf = invoice.invoice_pdf;
-        currentPaymentObj.hosted_invoice_url = invoice.hosted_invoice_url;
-      }
-
-      // Add the current computed details information to the response
-      response.push(currentPaymentObj);
-    }
-  }
-
-  return { payments: response, lastPaymentId: lastPaymentId, hasMore: hasMore };
+  return result;
 };
 
 export const processRefund = async ({
