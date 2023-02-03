@@ -134,6 +134,7 @@ export const createPaymentIntent = async ({
     clientSecret: paymentIntent.client_secret,
     price: consultation.price,
     currency: countryCurrency.symbol,
+    consultationCreationTime: consultation.created_at,
   };
 };
 

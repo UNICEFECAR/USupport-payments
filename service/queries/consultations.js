@@ -7,7 +7,7 @@ export const getConsultationByIdQuery = async ({
   await getDBPool("clinicalDb", poolCountry).query(
     `
   
-        SELECT price, time, status
+        SELECT price, time, status, created_at
         FROM consultation
         WHERE consultation_id = $1
         ORDER BY created_at DESC
