@@ -270,6 +270,9 @@ export const getPaymentHistory = async ({
   // Initialise the response
   let response = [];
 
+  if (!stripe_customer_id) {
+    return { payments: [], lastPaymentId: null, hasMore: false };
+  }
   let stripeObject = {
     customer: stripe_customer_id,
     limit: limit && limit,
