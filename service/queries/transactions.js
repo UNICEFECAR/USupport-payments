@@ -6,16 +6,17 @@ export const addTransactionQuery = async ({
   consultationId,
   paymentIntent,
   paymentRefundId,
+  campaignId = null,
 }) =>
   await getDBPool("clinicalDb", poolCountry).query(
     `
 
-        INSERT INTO transaction_log (type, consultation_id, payment_intent, payment_refund_id)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO transaction_log (type, consultation_id, payment_intent, payment_refund_id, campaign_id)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING *;
   
       `,
-    [type, consultationId, paymentIntent, paymentRefundId]
+    [type, consultationId, paymentIntent, paymentRefundId, campaignId]
   );
 
 export const getTrasanctionByConsultationIdQuery = async ({
@@ -24,9 +25,7 @@ export const getTrasanctionByConsultationIdQuery = async ({
 }) =>
   await getDBPool("clinicalDb", poolCountry).query(
     `
-
-          SELECT * FROM transaction_log WHERE consultation_id = $1;
-    
-        `,
+      SELECT * FROM transaction_log WHERE consultation_id = $1;
+    `,
     [consultationId]
   );
