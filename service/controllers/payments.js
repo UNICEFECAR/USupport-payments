@@ -114,6 +114,7 @@ export const createPaymentIntent = async ({
       consultationId: consultationId,
       countryAlpha2: country,
       language: language,
+      campaignId: consultation?.campaign_id,
     },
     description: textAudioVideoService,
 
@@ -135,6 +136,7 @@ export const createPaymentIntent = async ({
     price: consultation.price,
     currency: countryCurrency.symbol,
     consultationCreationTime: consultation.created_at,
+    paymentIntentId: paymentIntent.id,
   };
 };
 
@@ -159,7 +161,7 @@ export const processWebhookEvent = async ({ signature, payload }) => {
   // Handle the event
   switch (event.type) {
     case "payment_intent.succeeded":
-      let consultationId, country, language, paymentIntentId;
+      let consultationId, country, language, paymentIntentId, campaignId;
       try {
         paymentIntentId = event.data.object.id;
       } catch {
@@ -170,6 +172,7 @@ export const processWebhookEvent = async ({ signature, payload }) => {
         consultationId = event.data.object.metadata.consultationId;
         country = event.data.object.metadata.countryAlpha2;
         language = event.data.object.metadata.language;
+        campaignId = event.data.object.metadata.campaignId || null;
       } catch {
         throw metadataKeysNotFound;
       }
@@ -181,6 +184,7 @@ export const processWebhookEvent = async ({ signature, payload }) => {
         consultationId: consultationId,
         paymentIntent: paymentIntentId,
         paymentRefundId: null,
+        campaignId,
       })
         .then((raw) => {
           if (raw.rowCount === 0) {
@@ -319,7 +323,7 @@ export const getPaymentHistory = async ({
             ? payment.description
             : "Consultation";
 
-          // Try to get the receip of the payment
+          // Try to get the receipt of the payment
           try {
             const charge = await stripeInstance.charges.retrieve(
               payment.latest_charge
@@ -435,4 +439,11 @@ export const processRefund = async ({
   }).catch(console.log);
 
   return { success: true };
+};
+
+export const cancelPaymentIntent = async ({ paymentIntentId }) => {
+  const paymentIntent = await stripeInstance.paymentIntents.cancel(
+    paymentIntentId
+  );
+  return paymentIntent;
 };

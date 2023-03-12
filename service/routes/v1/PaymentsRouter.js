@@ -6,6 +6,7 @@ import {
   postWebhookEventSchema,
   getPaymentHistorySchema,
   postRefundSchema,
+  cancelPaymentIntentSchema,
 } from "#schemas/paymentSchemas";
 
 import {
@@ -13,6 +14,7 @@ import {
   processWebhookEvent,
   getPaymentHistory,
   processRefund,
+  cancelPaymentIntent,
 } from "#controllers/payments";
 
 import { populateClient } from "#middlewares/populateMiddleware";
@@ -57,6 +59,29 @@ router.post(
       .catch(next);
   }
 );
+
+router.put("/cancel-payment-intent", async (req, res, next) => {
+  /**
+   * #route   GET /payments/v1/one-time/cancel-payment-intent
+   * #desc
+   */
+
+  const country = req.header("x-country-alpha-2");
+  const language = req.header("x-language-alpha-2");
+  const paymentIntentId = req.body.paymentIntentId;
+
+  return await cancelPaymentIntentSchema
+    .noUnknown(true)
+    .strict()
+    .validate({
+      country,
+      language,
+      paymentIntentId,
+    })
+    .then(cancelPaymentIntent)
+    .then((result) => res.json(result).status(204))
+    .catch(next);
+});
 
 router.post("/webhook", async (req, res, next) => {
   /**

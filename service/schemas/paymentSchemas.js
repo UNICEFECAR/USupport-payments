@@ -27,3 +27,9 @@ export const postRefundSchema = yup.object().shape({
   user_id: yup.string().uuid().required(),
   consultationId: yup.string().uuid().required(),
 });
+
+export const cancelPaymentIntentSchema = yup.object().shape({
+  country: yup.string().required(),
+  language: yup.string().required(),
+  paymentIntentId: yup.string().required(),
+});
