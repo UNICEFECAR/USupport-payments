@@ -17,11 +17,11 @@ spec:
     spec:
       containers:
       - name: payments
-        image: {TODO: CHANGE}
+        image: 482053628475.dkr.ecr.eu-central-1.amazonaws.com/usupport-payments-api
         imagePullPolicy: Always
         envFrom:
         - secretRef:
-          name: payments-secrets
+            name: payments-secrets
         - configMapRef:
             name: payments-config
         ports:
