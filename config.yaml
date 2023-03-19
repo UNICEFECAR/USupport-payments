@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payments-config
+data:
+  NODE_ENV: production
+  PORT: 3005
+
+  PROVIDER_URL: http://provider:3002
+  
