@@ -4,7 +4,6 @@ metadata:
   name: payments-config
 data:
   NODE_ENV: production
-  PORT: "3005"
+  PORT: "3004"
 
   PROVIDER_URL: http://provider-service:3002
-  
