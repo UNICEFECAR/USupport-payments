@@ -1,6 +1,5 @@
 import fetch from "node-fetch";
 import stripe from "stripe";
-import { t2 } from "#translations/index";
 
 import { getCurrencyByCountryId } from "#queries/currencies";
 import { updateStripeCustomerIdQuery } from "#queries/clients";
@@ -161,6 +160,7 @@ export const processWebhookEvent = async ({ signature, payload }) => {
   // Handle the event
   switch (event.type) {
     case "payment_intent.succeeded":
+      // eslint-disable-next-line no-case-declarations
       let consultationId, country, language, paymentIntentId, campaignId;
       try {
         paymentIntentId = event.data.object.id;
@@ -197,6 +197,7 @@ export const processWebhookEvent = async ({ signature, payload }) => {
           throw err;
         });
 
+      // eslint-disable-next-line no-case-declarations
       const consultation = await getConsultationByIdQuery({
         poolCountry: country,
         consultationId,
