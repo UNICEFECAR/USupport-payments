@@ -40,3 +40,18 @@ export const updateStripeCustomerIdQuery = async ({
   `,
     [stripe_customer_id, client_id]
   );
+
+export const getClientLanguageByClientId = async ({
+  poolCountry,
+  clientDetailId,
+}) =>
+  await getDBPool("piiDb", poolCountry).query(
+    `
+  SELECT language
+  FROM "user"
+  WHERE client_detail_id = $1
+  ORDER BY created_at DESC
+  LIMIT 1;
+`,
+    [clientDetailId]
+  );

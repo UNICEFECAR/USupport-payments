@@ -2,12 +2,16 @@ import fetch from "node-fetch";
 import stripe from "stripe";
 
 import { getCurrencyByCountryId } from "#queries/currencies";
-import { updateStripeCustomerIdQuery } from "#queries/clients";
+import {
+  getClientLanguageByClientId,
+  updateStripeCustomerIdQuery,
+} from "#queries/clients";
 import {
   addTransactionQuery,
   getTrasanctionByConsultationIdQuery,
 } from "#queries/transactions";
 import { getConsultationByIdQuery } from "#queries/consultations";
+import { getProviderNameQuery } from "#queries/providers";
 
 import {
   consultationNotFound,
@@ -18,7 +22,10 @@ import {
   webhookEventKeysNotFound,
   scheduleCondultationError,
   paymentIntentsNotFound,
+  providerNotFound,
 } from "#utils/errors";
+import { getDateView, getTime } from "#utils/helperFunctions";
+import { t } from "#translations/index";
 
 const PROVIDER_LOCAL_HOST = "http://localhost:3002";
 const PROVIDER_URL = process.env.PROVIDER_URL;
@@ -27,8 +34,6 @@ const STRIPE_WEBHOOK_ENDPOINT_SECRET =
   process.env.STRIPE_WEBHOOK_ENDPOINT_SECRET;
 
 const stripeInstance = stripe(STRIPE_SECRET_KEY);
-
-const textAudioVideoService = "text_audio_video_consultation";
 
 export const createPaymentIntent = async ({
   country,
@@ -54,6 +59,38 @@ export const createPaymentIntent = async ({
     .catch((err) => {
       throw err;
     });
+
+  const providerData = await getProviderNameQuery({
+    poolCountry: country,
+    providerId: consultation.provider_detail_id,
+  })
+    .then((res) => {
+      if (res.rowCount === 0) {
+        throw providerNotFound(language);
+      }
+      return res.rows[0];
+    })
+    .catch((err) => {
+      throw err;
+    });
+
+  const clientLanguage = await getClientLanguageByClientId({
+    poolCountry: country,
+    clientDetailId: consultation.client_detail_id,
+  })
+    .then((res) => {
+      if (res.rowCount === 0) {
+        return "kk";
+      }
+      return res.rows[0].language;
+    })
+    .catch((err) => {
+      throw err;
+    });
+
+  const providerName = providerData.patronym
+    ? `${providerData.name} ${providerData.patronym} ${providerData.surname}`
+    : `${providerData.name} ${providerData.surname}`;
 
   let newCustomer;
   // Chekc if stripe customer exists and if not create new one and save it to the database.
@@ -102,6 +139,8 @@ export const createPaymentIntent = async ({
       throw err;
     });
 
+  const consultationDate = getDateView(consultation.time);
+  const consultationTime = getTime(consultation.time);
   let paymentIntentObj = {
     amount: consultation.price * 100,
     currency: countryCurrency.code.toLowerCase(),
@@ -115,8 +154,11 @@ export const createPaymentIntent = async ({
       language: language,
       campaignId: consultation?.campaign_id,
     },
-    description: textAudioVideoService,
-
+    description: t("payment_description", clientLanguage || "kk", [
+      providerName,
+      consultationDate,
+      consultationTime,
+    ]),
     customer: stripe_customer_id ? stripe_customer_id : newCustomer?.id,
   };
 
