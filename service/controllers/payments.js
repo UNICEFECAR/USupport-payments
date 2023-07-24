@@ -140,7 +140,6 @@ export const createPaymentIntent = async ({
     });
 
   const consultationDate = getDateView(consultation.time);
-  const consultationTime = getTime(consultation.time);
   let paymentIntentObj = {
     amount: consultation.price * 100,
     currency: countryCurrency.code.toLowerCase(),
@@ -157,7 +156,6 @@ export const createPaymentIntent = async ({
     description: t("payment_description", clientLanguage || "kk", [
       providerName,
       consultationDate,
-      consultationTime,
     ]),
     customer: stripe_customer_id ? stripe_customer_id : newCustomer?.id,
   };
