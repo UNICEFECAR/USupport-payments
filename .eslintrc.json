@@ -11,6 +11,13 @@
   "plugins": ["prettier"],
   "rules": {
     "no-undefined": "off",
-    "no-undef": "off"
+    "no-undef": "off",
+    "quotes": [
+      "error",
+      "double",
+      {
+        "allowTemplateLiterals": true
+      }
+    ]
   }
 }

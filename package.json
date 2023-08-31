@@ -4,13 +4,19 @@
   "description": "USupport admin Node.js API service",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint . --ext .js",
+    "lint-fix": "eslint . --ext .js --fix"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "eslint": "^8.44.0",
-    "eslint-config-prettier": "^8.8.0",
+    "eslint": "^8.48.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.28.1",
+    "eslint-plugin-n": "^16.0.2",
+    "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-prettier": "^5.0.0",
     "prettier": "^3.0.0"
   }

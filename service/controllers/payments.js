@@ -24,7 +24,7 @@ import {
   paymentIntentsNotFound,
   providerNotFound,
 } from "#utils/errors";
-import { getDateView, getTime } from "#utils/helperFunctions";
+import { getDateView } from "#utils/helperFunctions";
 import { t } from "#translations/index";
 
 const PROVIDER_LOCAL_HOST = "http://localhost:3002";
