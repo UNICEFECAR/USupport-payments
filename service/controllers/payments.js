@@ -348,7 +348,7 @@ export const getPaymentHistory = async ({
             time: "",
             paymentId: "",
             paymentMethod: "",
-            recipient: "USupport",
+            recipient: "uSupport",
             address:
               "Almaty Kazakstan, 050000, 1st street, 1st building, 1st floor, 1st room",
             email: "usupport@7digit.io",
