@@ -6,8 +6,8 @@ export default {
   metadata_keys_not_found_error: "Metadata keys not found",
   webhook_event_keys_not_found_error: "Webhook event keys not found",
   paymentIntentDescription:
-    "Your consultation is booked for {consultationDate} at {consultationTime}. You can change the date and time when you want until 24 hours before the consultation.KK",
+    "Your consultation is booked for {consultationDate} at {consultationTime}. You can change the date and time when you want until 24 hours before the consultation. UK",
   payment_intents_not_found_error: "Payment intents not found",
-  payment_description: "Konsultacje z {1} w dniu {2}",
-  provider_not_found_error: "Консультант табылмады",
+  payment_description: "Консультація з {1} на {2}",
+  provider_not_found_error: "Provider not found",
 };
