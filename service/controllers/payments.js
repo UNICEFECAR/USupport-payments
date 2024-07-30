@@ -98,7 +98,7 @@ export const createPaymentIntent = async ({
     // Create a new customer and attach the PaymentMethod in one API call.
     newCustomer = await stripeInstance.customers
       .create({
-        email: email ? email : "",
+        email: "",
         metadata: {
           user_id: user_id,
           client_id: client_id,
