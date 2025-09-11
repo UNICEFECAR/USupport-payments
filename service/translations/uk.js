@@ -1,13 +1,14 @@
 export default {
-  currency_not_found_error: "Currency not found",
-  client_not_found_error: "Client not found",
-  stripe_customer_id_not_found_error: "Stripe customer ID not found",
-  consultation_not_found_error: "Consultation not found",
-  metadata_keys_not_found_error: "Metadata keys not found",
-  webhook_event_keys_not_found_error: "Webhook event keys not found",
+  currency_not_found_error: "Валюти не знайдено",
+  client_not_found_error: "Клієнта/ки не знайдено",
+  stripe_customer_id_not_found_error:
+    "Ідентифікатора клієнта/ки Stripe не знайдено",
+  consultation_not_found_error: "Консультації не знайдено",
+  metadata_keys_not_found_error: "Ключів метаданих не знайдено",
+  webhook_event_keys_not_found_error: "Ключів подій Webhook не знайдено",
   paymentIntentDescription:
-    "Your consultation is booked for {consultationDate} at {consultationTime}. You can change the date and time when you want until 24 hours before the consultation. UK",
-  payment_intents_not_found_error: "Payment intents not found",
+    "Твою консультацію зарезервовано на {consultationDate} о {consultationTime}. Змінити дату та час можна не пізніше, ніж за 24 години до її початку.",
+  payment_intents_not_found_error: "Цілі платежу не знайдено",
   payment_description: "Консультація з {1} на {2}",
-  provider_not_found_error: "Provider not found",
+  provider_not_found_error: "Консультанта/ки не знайдено",
 };
