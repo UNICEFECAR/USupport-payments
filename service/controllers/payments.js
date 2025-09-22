@@ -193,7 +193,7 @@ export const processWebhookEvent = async ({ signature, payload }) => {
         STRIPE_WEBHOOK_ENDPOINT_SECRET
       );
     } catch (err) {
-      console.log(`⚠️  Webhook signature verification failed.`, err.message);
+      console.log("⚠️  Webhook signature verification failed.", err.message);
     }
   }
 
