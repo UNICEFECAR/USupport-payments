@@ -1,0 +1,12 @@
+{
+  "currency_not_found_error": "Moneda nu a fost găsită",
+  "client_not_found_error": "Clientul nu a fost găsit",
+  "stripe_customer_id_not_found_error": "ID-ul clientului Stripe nu a fost găsit",
+  "consultation_not_found_error": "Consultația nu a fost găsită",
+  "metadata_keys_not_found_error": "Cheile metadatelor nu au fost găsite",
+  "webhook_event_keys_not_found_error": "Cheile evenimentului Webhook nu au fost găsite",
+  "paymentIntentDescription": "Consultația dvs. este programată în ziua de{consultationDate} la {consultationTime}. Puteți modifica data și ora oricând doriți, dar nu cu mai puțin de 24 de ore înainte de consultație..",
+  "payment_intents_not_found_error": "Intențiile de plată nu au fost găsite",
+  "payment_description": "Consultație cu {1} pe {2}",
+  "provider_not_found_error": "Furnizorul nu a fost găsit"
+}
