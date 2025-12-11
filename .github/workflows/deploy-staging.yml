@@ -57,6 +57,8 @@ jobs:
             echo "  MASTER_DB_URL: '${{ secrets.MASTER_DB_URL }}'"
             echo "  PII_DB_URL_AM: '${{ secrets.PII_DB_URL_AM }}'"
             echo "  CLINICAL_DB_URL_AM: '${{ secrets.CLINICAL_DB_URL_AM }}'"
+            echo "  PII_DB_URL_CY: '${{ secrets.PII_DB_URL_CY }}'"
+            echo "  CLINICAL_DB_URL_CY: '${{ secrets.CLINICAL_DB_URL_CY }}'"
             echo "  STRIPE_SECRET_KEY: '${{ secrets.STRIPE_SECRET_KEY }}'"
             echo "  STRIPE_WEBHOOK_ENDPOINT_SECRET: '${{ secrets.STRIPE_WEBHOOK_ENDPOINT_SECRET }}'"
           } > kube-config/staging/secrets.yaml
