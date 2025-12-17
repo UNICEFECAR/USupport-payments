@@ -1,12 +1,12 @@
 {
-  "currency_not_found_error": "Currency not found",
-  "client_not_found_error": "Client not found",
-  "stripe_customer_id_not_found_error": "Stripe customer ID not found",
-  "consultation_not_found_error": "Consultation not found",
-  "metadata_keys_not_found_error": "Metadata keys not found",
-  "webhook_event_keys_not_found_error": "Webhook event keys not found",
-  "paymentIntentDescription": "Your consultation is booked for {consultationDate} at {consultationTime}. You can change the date and time when you want until 24 hours before the consultation.",
-  "payment_intents_not_found_error": "Payment intents not found",
-  "payment_description": "Consultation with {1} on {2}",
-  "provider_not_found_error": "Provider not found"
+  "currency_not_found_error": "Δεν βρέθηκε νόμισμα",
+  "client_not_found_error": "Δεν βρέθηκε πελάτης",
+  "stripe_customer_id_not_found_error": "Το αναγνωριστικό πελάτη Stripe δεν βρέθηκε",
+  "consultation_not_found_error": "Δεν βρέθηκε συνεδρία",
+  "metadata_keys_not_found_error": "Δεν βρέθηκαν κλειδιά μεταδεδομένων",
+  "webhook_event_keys_not_found_error": "Δεν βρέθηκαν κλειδιά συμβάντων webhook",
+  "paymentIntentDescription": "Η συνεδρία σας έχει προγραμματιστεί για {consultationDate} στις {consultationTime}. Μπορείτε να αλλάξετε την ημερομηνία και την ώρα όποτε θέλετε έως και 24 ώρες πριν από τη συνεδρία.",
+  "payment_intents_not_found_error": "Δεν βρέθηκαν προθέσεις πληρωμής",
+  "payment_description": "Συνεδρία με {1} στις {2}",
+  "provider_not_found_error": "Δεν βρέθηκε πάροχος"
 }
