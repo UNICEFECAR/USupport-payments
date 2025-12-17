@@ -64,4 +64,4 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           chmod +x ./deploy.sh
-          ./deploy.sh prod redeploygit
+          ./deploy.sh prod redeploy
